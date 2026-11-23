@@ -113,7 +113,6 @@ func parseEnv(raw string) map[string]parsedEntry {
 
 func inspectValue(key, value, target string, rule Rule) Finding {
 	f := Finding{Key:key, Masked:maskValue(value), Severity:"PASS", Code:"PASS", Message:"Value passed configured checks.", Suggestion:"No action required."}
-	upper := strings.ToUpper(value)
 	if isWeakSecret(key, value) {
 		f.Severity, f.Code, f.Message, f.Suggestion = "FAIL", "WEAK_OR_PLACEHOLDER_SECRET", "Secret appears short, predictable, or is a placeholder.", "Use a unique randomly generated secret stored in a secret manager."
 		return f
@@ -125,7 +124,7 @@ func inspectValue(key, value, target string, rule Rule) Finding {
 	switch rule.Format {
 	case "URL_HTTPS", "URL":
 		u, err := url.ParseRequestURI(value)
-		if err != nil || u.Host == "" || (rule.Format == "URL_HTTPS" && u.Scheme != "https") || (u.Scheme != "http" && u.Scheme != "https") {
+		if err != nil || u.Host == "" || u.Scheme == "" || (rule.Format == "URL_HTTPS" && u.Scheme != "https") {
 			f.Severity, f.Code, f.Message, f.Suggestion = "FAIL", "INVALID_URL_OR_DSN", "URL is malformed or does not use the required scheme.", "Provide a valid URL; use HTTPS for production endpoints."
 		}
 	case "POSTGRES_DSN":
@@ -149,7 +148,6 @@ func inspectValue(key, value, target string, rule Rule) Finding {
 			f.Severity, f.Code, f.Message, f.Suggestion = "FAIL", "ENV_MISMATCH", "Value is not one of the contract's allowed options.", "Choose one of the declared values."
 		}
 	}
-	_ = upper
 	return f
 }
 
@@ -167,7 +165,7 @@ func isWeakSecret(key, value string) bool {
 func maskValue(value string) string {
 	runes := []rune(value)
 	if len(runes) == 0 { return "(empty)" }
-	if len(runes) <= 4 { return strings.Repeat("*", len(runes)) }
+	if len(runes) <= 6 { return strings.Repeat("*", len(runes)) }
 	prefix := string(runes[:2])
 	suffix := string(runes[len(runes)-4:])
 	for _, r := range runes { if unicode.IsSpace(r) { return "[masked]" } }
