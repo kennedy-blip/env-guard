@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#070a12">
+  <meta name="description" content="Validate environment variables and deployment configuration before release.">
+  <title>EnvGuard — Configuration & Secret Validator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/styles.css">
+  <script defer src="/app.js"></script>
+</head>
+<body class="min-h-screen">
+  <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+  <header class="topbar">
+    <a class="brand" href="/"><span class="brand-mark">E</span><span>Env<span class="cyan">Guard</span><small>CONFIGURATION CONTROL PLANE</small></span></a>
+    <div class="engine"><span class="pulse"></span><span id="engine-status">EnvGuard Go Engine: checking…</span></div>
+  </header>
+  <main class="shell">
+    <section class="hero">
+      <div><div class="eyebrow">PRE-DEPLOYMENT SECURITY GATE</div><h1>Ship with <span class="gradient-text">confidence.</span></h1><p>Catch missing variables, weak placeholders, unsafe flags, and malformed connection strings before they reach production.</p></div>
+      <div class="score-card glass"><div class="score-head"><span>CONFIG READINESS</span><span id="verdict" class="status status-idle">NOT CHECKED</span></div><div class="score-line"><strong id="score">—</strong><span>/ 100</span></div><div class="meter"><i id="score-meter"></i></div><div class="score-foot"><span id="checked-count">0 keys inspected</span><span>DEPLOY GATE</span></div></div>
+    </section>
+    <section class="quick-actions">
+      <button id="load-production" class="btn btn-primary">↳ Load Production Preset</button>
+      <button id="inject-broken" class="btn btn-quiet">⚡ Inject Broken Secrets</button>
+      <span class="hint">Use sample values only. Never paste live credentials.</span>
+    </section>
+    <div class="workspace">
+      <section class="panel editor-panel">
+        <div class="panel-heading"><div><div class="eyebrow">01 / INPUT</div><h2>Environment bundle</h2></div><span class="tag">.ENV EDITOR</span></div>
+        <label class="field-label" for="preset-select">SERVICE CONTRACT</label>
+        <select id="preset-select" class="control"><option>Loading contracts…</option></select>
+        <div class="field-row"><label class="field-label" for="environment">TARGET ENVIRONMENT</label><select id="environment" class="control compact"><option value="development">development</option><option value="staging">staging</option><option value="production" selected>production</option></select></div>
+        <label class="field-label" for="env-editor">RAW ENVIRONMENT VARIABLES <span>KEY=VALUE</span></label>
+        <textarea id="env-editor" spellcheck="false" class="code-editor" aria-label="Environment variables" placeholder="APP_ENV=production&#10;APP_URL=https://api.example.com"></textarea>
+        <div class="editor-footer"><span id="line-count">0 lines</span><span>COMMENTS & BLANK LINES IGNORED</span></div>
+        <div class="contract-box"><div class="contract-title">CONTRACT CHECKLIST</div><div id="contract-checklist" class="checklist"><span class="muted">Select a contract to view its rules.</span></div></div>
+        <button id="validate" class="btn btn-primary validate-btn">Validate Config <span>→</span></button>
+        <p class="privacy-note">Values are masked in results. Avoid submitting production secrets; validate synthetic values locally first.</p>
+      </section>
+      <section class="panel findings-panel">
+        <div class="panel-heading"><div><div class="eyebrow">02 / INSPECTION</div><h2>Validation findings</h2></div><span id="finding-total" class="tag">AWAITING SCAN</span></div>
+        <div id="empty-state" class="empty-state"><div class="empty-icon">⌁</div><h3>Ready when you are</h3><p>Run the validator to inspect every declared key and surface actionable configuration issues.</p><div class="empty-points"><span>✓ Secret masking</span><span>✓ Concurrent checks</span><span>✓ Deploy verdict</span></div></div>
+        <div id="findings" class="findings-list" aria-live="polite"></div>
+      </section>
+    </div>
+    <section class="panel export-panel">
+      <div class="panel-heading"><div><div class="eyebrow">03 / CONTRACTS</div><h2>Preset & export</h2></div><span class="tag violet-tag">.ENV.EXAMPLE</span></div>
+      <div class="export-content"><div><h3>Sanitized environment template</h3><p>Copy a safe starter file with placeholder values instead of secrets.</p></div><button id="copy-example" class="btn btn-quiet">Copy .env.example</button></div>
+      <div class="custom-contract"><span>Need a reusable schema?</span><button id="save-contract" class="text-button">Save current contract ↗</button></div>
+      <p id="toast" class="toast" role="status"></p>
+    </section>
+    <footer><span>ENVGUARD <b>v1.0.0</b></span><span>BUILT FOR SAFER DEPLOYMENTS · GO + VANILLA JS</span></footer>
+  </main>
+</body>
+</html>
