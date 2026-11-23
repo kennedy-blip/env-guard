@@ -38,7 +38,7 @@ function localValidate(targetEnv, rawEnvText, requiredKeys, rules) {
     const f = {key,masked:mask(value),severity:"PASS",code:"PASS",message:"Value passed configured checks.",suggestion:"No action required."};
     if (weakSecret(key,value)) Object.assign(f,{severity:"FAIL",code:"WEAK_OR_PLACEHOLDER_SECRET",message:"Secret appears short, predictable, or is a placeholder.",suggestion:"Use a unique randomly generated secret stored in a secret manager."});
     else if (targetEnv === "production" && ((/^(DEBUG|ENABLE_)/.test(key) && value.toLowerCase()==="true") || /localhost|127\.0\.0\.1/i.test(value))) Object.assign(f,{severity:"FAIL",code:"ENV_MISMATCH",message:"Development-only value detected in production.",suggestion:"Use production endpoints and disable debug-only flags."});
-    else if (["URL","URL_HTTPS"].includes(rule.format)) { try { const u=new URL(value); if (!["http:","https:"].includes(u.protocol) || (rule.format==="URL_HTTPS" && u.protocol!=="https:")) throw Error(); } catch { Object.assign(f,{severity:"FAIL",code:"INVALID_URL_OR_DSN",message:"URL is malformed or does not use the required scheme.",suggestion:"Provide a valid URL; use HTTPS for production endpoints."}); } }
+    else if (["URL","URL_HTTPS"].includes(rule.format)) { try { const u=new URL(value); if (!u.hostname || (rule.format==="URL_HTTPS" && u.protocol!=="https:")) throw Error(); } catch { Object.assign(f,{severity:"FAIL",code:"INVALID_URL_OR_DSN",message:"URL is malformed or does not use the required scheme.",suggestion:"Provide a valid URL; use HTTPS for production endpoints."}); } }
     else if (rule.format==="POSTGRES_DSN" && !/^postgres(ql)?:\/\/[^@]+@[^/]+\/.+/.test(value)) Object.assign(f,{severity:"FAIL",code:"INVALID_URL_OR_DSN",message:"PostgreSQL connection string is malformed.",suggestion:"Use postgres://user:password@host:5432/database."});
     else if (rule.format==="INTEGER_RANGE" && (!/^\d+$/.test(value) || +value<rule.min || +value>rule.max)) Object.assign(f,{severity:"FAIL",code:"OUT_OF_RANGE_INT",message:"Integer is outside the contract range.",suggestion:"Set a numeric value within the contract range."});
     else if (rule.format==="SECRET_MIN_LEN" && value.length<rule.min) Object.assign(f,{severity:"FAIL",code:"WEAK_OR_PLACEHOLDER_SECRET",message:"Secret does not meet the minimum length.",suggestion:"Generate a longer random secret."});
@@ -102,7 +102,7 @@ async function validate() {
 }
 function sanitizedExample() {
   const values=parseEnv($("#env-editor").value);
-  return Object.keys(values).map(key=>{const secret=/(SECRET|TOKEN|PASSWORD|API_KEY|PRIVATE_KEY)/i.test(key);return key+"="+(secret?"<GENERATE_SECRET>":values[key].includes("localhost")?"http://localhost:PORT":values[key].includes("postgres")?"postgres://USER:PASSWORD@HOST:5432/DATABASE":values[key].includes("https://")?"https://YOUR_HOST":values[key]);}).join("\n");
+  return Object.keys(values).map(key=>{const secret=/(SECRET|TOKEN|PASSWORD|API_KEY|PRIVATE_KEY)/i.test(key);return key+"="+(secret?"<GENERATE_SECRET>":values[key].includes("localhost")?"http://localhost:PORT":values[key].includes("postgres")?"postgres://USER:PASSWORD@HOST:5432/DATABASE":values[key].includes("://")?new URL(values[key]).protocol+"//YOUR_HOST/":values[key]);}).join("\n");
 }
 async function init() {
   try {const health=await api("/api/health");state.online=health.status==="ok";$("#engine-status").textContent="EnvGuard Go Engine: Active • Secret & Schema Guard Ready";}
